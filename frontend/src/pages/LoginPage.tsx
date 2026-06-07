@@ -1,0 +1,90 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
+import { useAppDispatch } from "../store/hooks";
+import { setLoading, setUser, setError } from "../store/userSlice";
+
+const loginSchema = z.object({
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(6, "Password must have at least 6 characters"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+
+const LoginPage = () => {
+  const [message, setMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    setMessage(null);
+    setErrorMessage(null);
+    dispatch(setLoading());
+
+    try {
+      const response = await axiosInstance.post("/auth/login", data);
+      const result = response.data;
+      const token = result.token;
+
+      localStorage.setItem("jwtToken", token);
+
+      dispatch(
+        setUser({
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+        })
+      );
+
+      setMessage("Login successful!");
+    } catch (error) {
+      const message =
+        axios.isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : error instanceof Error
+          ? error.message
+          : "Login failed";
+      dispatch(setError(message));
+      setErrorMessage(message);
+    }
+  };
+
+  return (
+    <main>
+      <h1>Login</h1>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div>
+          <label htmlFor="email">Email</label>
+          <input id="email" type="email" {...register("email")} />
+          {errors.email && <p>{errors.email.message}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="password">Password</label>
+          <input id="password" type="password" {...register("password")} />
+          {errors.password && <p>{errors.password.message}</p>}
+        </div>
+
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Logging in..." : "Login"}
+        </button>
+      </form>
+
+      {message && <p style={{ color: "green" }}>{message}</p>}
+      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+    </main>
+  );
+};
+
+export default LoginPage;
