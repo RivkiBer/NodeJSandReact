@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import axios, { AxiosError } from "axios";
+import axiosInstance from "../api/axiosInstance";
+import { useAppDispatch } from "../store/hooks";
+import { setLoading, setUser, setError } from "../store/userSlice";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must have at least 2 characters"),
@@ -14,6 +18,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 const RegisterPage = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
 
   const {
     register,
@@ -26,24 +31,30 @@ const RegisterPage = () => {
   const onSubmit = async (data: RegisterFormData) => {
     setMessage(null);
     setErrorMessage(null);
+    dispatch(setLoading());
 
     try {
-      const response = await fetch("http://localhost:4000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await axiosInstance.post("/auth/register", data);
+      const result = response.data;
 
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to register");
-      }
+      dispatch(
+        setUser({
+          id: result.user.id,
+          name: result.user.name,
+          email: result.user.email,
+        })
+      );
 
       setMessage("Registration successful! You can now log in.");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Registration failed");
+      const message =
+        axios.isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : error instanceof Error
+          ? error.message
+          : "Registration failed";
+      dispatch(setError(message));
+      setErrorMessage(message);
     }
   };
 

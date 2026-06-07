@@ -5,12 +5,57 @@ body {
   color: #20232a;
 }
 
-header {
-  padding: 16px;
-  background: #282c34;
-  color: #ffffff;
+* {
+  box-sizing: border-box;
 }
 
-main {
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  background: #282c34;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+}
+
+.navbar__brand a,
+.navbar__links a {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.navbar__brand a {
+  font-weight: 600;
+}
+
+.navbar__links a {
+  margin-left: 16px;
+}
+
+.navbar__user {
+  margin-left: 12px;
+  color: #cfe3ff;
+}
+
+.app-content {
+  flex: 1;
   padding: 24px;
+  max-width: 1024px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.footer {
+  padding: 12px 20px;
+  background: #f0f0f0;
+  color: #333;
+  text-align: center;
 }
