@@ -3,21 +3,18 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import axiosInstance from "../api/axiosInstance";
 import { useAppDispatch } from "../store/hooks";
 import { setLoading, setUser, setError } from "../store/userSlice";
 
-const registerSchema = z.object({
+const loginSchema = z.object({
   username: z.string().min(3, "שם משתמש חייב להיות לפחות 3 תווים"),
-  email: z.string().email("כתובת אימייל לא תקינה"),
   password: z.string().min(6, "סיסמה חייבת להיות לפחות 6 תווים"),
 });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
-const RegisterPage = () => {
-  const [message, setMessage] = useState<string | null>(null);
+const LoginPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -26,19 +23,22 @@ const RegisterPage = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
-    setMessage(null);
+  const onSubmit = async (data: LoginFormData) => {
     setErrorMessage(null);
     dispatch(setLoading());
 
     try {
-      const response = await axiosInstance.post("/auth/register", data);
+      const response = await axiosInstance.post("/auth/login", data);
       const result = response.data;
 
+      // Save token to localStorage
+      localStorage.setItem("token", result.token);
+
+      // Update Redux state
       dispatch(
         setUser({
           id: result.user.id,
@@ -47,26 +47,20 @@ const RegisterPage = () => {
         })
       );
 
-      setMessage("ההרשמה בוצעה בהצלחה! מעבר לעמוד הכניסה...");
-      setTimeout(() => navigate("/login"), 2000);
-    } catch (error) {
-      const message =
-        axios.isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : error instanceof Error
-          ? error.message
-          : "ההרשמה נכשלה";
-      dispatch(setError(message));
+      // Redirect to home
+      navigate("/");
+    } catch (error: any) {
+      const message = error.response?.data?.message || "הכניסה נכשלה. אנא נסה שנית.";
       setErrorMessage(message);
+      dispatch(setError(message));
     }
   };
 
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1>הרשמה</h1>
+        <h1>כניסה</h1>
 
-        {message && <div style={{ color: "green", marginBottom: "16px" }}>{message}</div>}
         {errorMessage && <div className="error-message">{errorMessage}</div>}
 
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -83,18 +77,6 @@ const RegisterPage = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">אימייל</label>
-            <input
-              id="email"
-              type="email"
-              placeholder="הכנס אימייל"
-              {...register("email")}
-              disabled={isSubmitting}
-            />
-            {errors.email && <span className="error-text">{errors.email.message}</span>}
-          </div>
-
-          <div className="form-group">
             <label htmlFor="password">סיסמה</label>
             <input
               id="password"
@@ -107,16 +89,16 @@ const RegisterPage = () => {
           </div>
 
           <button type="submit" disabled={isSubmitting} className="submit-button">
-            {isSubmitting ? "מעבד..." : "הרשם"}
+            {isSubmitting ? "מעבד..." : "התחבר"}
           </button>
         </form>
 
         <p className="auth-link">
-          יש לך חשבון כבר? <a href="/login">התחבר כאן</a>
+          עדיין לא רשום? <a href="/register">הרשם כאן</a>
         </p>
       </div>
     </div>
   );
 };
 
-export default RegisterPage;
+export default LoginPage;
