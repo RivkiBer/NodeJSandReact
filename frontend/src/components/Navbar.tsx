@@ -10,6 +10,7 @@ const Navbar = () => {
         <Link to="/">Survey Stats</Link>
       </div>
       <div className="navbar__links">
+        <Link to="/login">Login</Link>
         <Link to="/register">Register</Link>
         {user ? <span className="navbar__user">{user.name}</span> : null}
       </div>
