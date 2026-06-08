@@ -44,7 +44,6 @@ const RegisterPage = () => {
         localStorage.setItem("jwtToken", token);
       }
 
-      localStorage.setItem("token", result.token);
       localStorage.setItem("user", JSON.stringify(result.user));
 
       dispatch(
@@ -57,6 +56,7 @@ const RegisterPage = () => {
       );
 
       setMessage("Registration successful! You are now logged in.");
+      navigate("/surveys");
     } catch (error) {
       const message =
         axios.isAxiosError(error) && error.response?.data?.message

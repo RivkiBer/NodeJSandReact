@@ -8,9 +8,11 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    localStorage.removeItem("jwtToken");
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     dispatch(clearUser());
-    navigate("/register");
+    navigate("/login");
   };
 
   return (
@@ -21,7 +23,17 @@ const Navbar = () => {
       <div className="navbar__links">
         <Link to="/login">Login</Link>
         <Link to="/register">Register</Link>
-        {user ? <span className="navbar__user">{user.username}</span> : null}
+        <Link to="/surveys">Surveys</Link>
+        <Link to="/surveys/create">Create Survey</Link>
+        <Link to="/responses">Respond</Link>
+        {user ? (
+          <>
+            <span className="navbar__user">{user.username}</span>
+            <button className="navbar__logout" onClick={handleLogout}>
+              Logout
+            </button>
+          </>
+        ) : null}
       </div>
     </nav>
   );
