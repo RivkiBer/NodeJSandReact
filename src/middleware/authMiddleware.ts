@@ -1,21 +1,37 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { type Secret } from "jsonwebtoken";
+import { jwtConfig } from "../config/jwt.js";
 
-export const authenticateUser = (req: Request, res: Response, next: NextFunction) => {
+interface JwtPayloadData {
+  userId: string;
+  email: string;
+  iat?: number;
+  exp?: number;
+}
+
+interface AuthenticatedRequest extends Request {
+  user?: JwtPayloadData;
+}
+
+export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Authorization token is required" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-
-    if (!token) {
-      const error = new Error("No token provided");
-      (error as any).status = 401;
-      throw error;
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key");
-    (req as any).user = decoded;
+    const decoded = jwt.verify(token, jwtConfig.secret as Secret) as JwtPayloadData;
+    (req as AuthenticatedRequest).user = {
+      userId: decoded.userId,
+      email: decoded.email,
+      iat: decoded.iat,
+      exp: decoded.exp,
+    };
     next();
   } catch (error) {
-    (error as any).status = 401;
-    next(error);
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
+

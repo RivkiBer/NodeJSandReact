@@ -1,9 +1,23 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import jwt, { type Secret, type SignOptions } from "jsonwebtoken";
 import User from "../models/User.js";
 import { validateRegisterInput, validateLoginInput } from "../validators/authValidators.js";
 import { jwtConfig } from "../config/jwt.js";
+
+interface LoginPayload {
+  userId: string;
+  email: string;
+}
+
+const createJwtToken = (payload: LoginPayload) => {
+  const secret = jwtConfig.secret as Secret;
+  const options: SignOptions = {
+    expiresIn: jwtConfig.expiresIn as SignOptions["expiresIn"],
+  };
+
+  return jwt.sign(payload as object, secret, options);
+};
 
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -19,13 +33,18 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ username, email, password: hashedPassword });
+    const user = await User.create({ name, email, password: hashedPassword });
+    const token = createJwtToken({
+      userId: user._id.toString(),
+      email: user.email,
+    });
 
     res.status(201).json({
       message: "User registered successfully",
+      token,
       user: {
         id: user._id,
-        username: user.username,
+        name: user.name,
         email: user.email,
       },
     });
@@ -36,36 +55,50 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { username, password } = validateLoginInput(req);
+    const { email, password } = validateLoginInput(req);
 
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ email });
+    console.log("aaaa Login attempt for email:", email);
     if (!user) {
-      const error = new Error("Invalid username or password");
+      const error = new Error("Invalid email or password");
       (error as any).status = 401;
       throw error;
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      const error = new Error("Invalid username or password");
+    console.log("DB password:", user.password);
+    console.log("Plain password:", password);
+
+    let passwordMatches = await bcrypt.compare(password, user.password);
+
+    // Support old users whose password may have been saved without hashing.
+    if (!passwordMatches && user.password === password) {
+      passwordMatches = true;
+      user.password = await bcrypt.hash(password, 10);
+      await user.save();
+    }
+
+    if (!passwordMatches) {
+      const error = new Error("Invalid email or password");
       (error as any).status = 401;
       throw error;
     }
 
-    const token = jwt.sign({ id: user._id, username: user.username }, jwtConfig.secret, {
-      expiresIn: jwtConfig.expiresIn,
+    const token = createJwtToken({
+      userId: user._id.toString(),
+      email: user.email,
     });
 
     res.status(200).json({
-      message: "Login successful",
       token,
       user: {
         id: user._id,
         username: user.username,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (error) {
     next(error);
   }
 };
+

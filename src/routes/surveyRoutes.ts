@@ -16,13 +16,13 @@ router.get("/", getAllSurveys);
 // GET /surveys/:id - Get survey by ID
 router.get("/:id", getSurveyById);
 
-// POST /surveys - Create new survey (requires authentication)
+// POST /surveys - Create new survey
 router.post("/", authenticateUser, createSurvey);
 
-// PUT /surveys/:id - Update survey (requires authentication)
+// PUT /surveys/:id - Update survey
 router.put("/:id", authenticateUser, updateSurvey);
 
-// DELETE /surveys/:id - Delete survey (requires authentication)
+// DELETE /surveys/:id - Delete survey
 router.delete("/:id", authenticateUser, deleteSurvey);
 
 export default router;

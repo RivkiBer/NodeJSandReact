@@ -2,22 +2,22 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import axiosInstance from "../api/axiosInstance";
 import { useAppDispatch } from "../store/hooks";
 import { setLoading, setUser, setError } from "../store/userSlice";
 
 const loginSchema = z.object({
-  username: z.string().min(3, "שם משתמש חייב להיות לפחות 3 תווים"),
-  password: z.string().min(6, "סיסמה חייבת להיות לפחות 6 תווים"),
+  email: z.string().email("Enter a valid email address"),
+  password: z.string().min(6, "Password must have at least 6 characters"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
 const LoginPage = () => {
+  const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
 
   const {
     register,
@@ -28,76 +28,62 @@ const LoginPage = () => {
   });
 
   const onSubmit = async (data: LoginFormData) => {
+    setMessage(null);
     setErrorMessage(null);
     dispatch(setLoading());
 
     try {
       const response = await axiosInstance.post("/auth/login", data);
       const result = response.data;
+      const token = result.token;
 
-      // Save token to localStorage
-      localStorage.setItem("token", result.token);
+      localStorage.setItem("jwtToken", token);
 
-      // Update Redux state
       dispatch(
         setUser({
           id: result.user.id,
-          username: result.user.username,
+          name: result.user.name,
           email: result.user.email,
         })
       );
 
-      // Redirect to home
-      navigate("/");
-    } catch (error: any) {
-      const message = error.response?.data?.message || "הכניסה נכשלה. אנא נסה שנית.";
-      setErrorMessage(message);
+      setMessage("Login successful!");
+    } catch (error) {
+      const message =
+        axios.isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : error instanceof Error
+          ? error.message
+          : "Login failed";
       dispatch(setError(message));
+      setErrorMessage(message);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1>כניסה</h1>
+    <main>
+      <h1>Login</h1>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div>
+          <label htmlFor="email">Email</label>
+          <input id="email" type="email" {...register("email")} />
+          {errors.email && <p>{errors.email.message}</p>}
+        </div>
 
-        {errorMessage && <div className="error-message">{errorMessage}</div>}
+        <div>
+          <label htmlFor="password">Password</label>
+          <input id="password" type="password" {...register("password")} />
+          {errors.password && <p>{errors.password.message}</p>}
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="form-group">
-            <label htmlFor="username">שם משתמש</label>
-            <input
-              id="username"
-              type="text"
-              placeholder="הכנס שם משתמש"
-              {...register("username")}
-              disabled={isSubmitting}
-            />
-            {errors.username && <span className="error-text">{errors.username.message}</span>}
-          </div>
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Logging in..." : "Login"}
+        </button>
+      </form>
 
-          <div className="form-group">
-            <label htmlFor="password">סיסמה</label>
-            <input
-              id="password"
-              type="password"
-              placeholder="הכנס סיסמה"
-              {...register("password")}
-              disabled={isSubmitting}
-            />
-            {errors.password && <span className="error-text">{errors.password.message}</span>}
-          </div>
-
-          <button type="submit" disabled={isSubmitting} className="submit-button">
-            {isSubmitting ? "מעבד..." : "התחבר"}
-          </button>
-        </form>
-
-        <p className="auth-link">
-          עדיין לא רשום? <a href="/register">הרשם כאן</a>
-        </p>
-      </div>
-    </div>
+      {message && <p style={{ color: "green" }}>{message}</p>}
+      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+    </main>
   );
 };
 

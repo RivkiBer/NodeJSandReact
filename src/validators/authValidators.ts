@@ -7,7 +7,7 @@ export interface RegisterInput {
 }
 
 export interface LoginInput {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -43,10 +43,10 @@ export const validateRegisterInput = (req: Request): RegisterInput => {
 };
 
 export const validateLoginInput = (req: Request): LoginInput => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!username || typeof username !== "string" || username.trim().length === 0) {
-    const error = new Error("Username is required");
+  if (!email || typeof email !== "string" || !EMAIL_REGEX.test(email)) {
+    const error = new Error("A valid email address is required");
     (error as any).status = 400;
     throw error;
   }
@@ -58,7 +58,7 @@ export const validateLoginInput = (req: Request): LoginInput => {
   }
 
   return {
-    username: username.trim().toLowerCase(),
+    email: email.trim().toLowerCase(),
     password,
   };
 };

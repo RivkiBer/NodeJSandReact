@@ -10,7 +10,7 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     dispatch(clearUser());
-    navigate("/login");
+    navigate("/register");
   };
 
   return (
@@ -19,19 +19,9 @@ const Navbar = () => {
         <Link to="/">סקרים וסטטיסטיקות</Link>
       </div>
       <div className="navbar__links">
-        {user ? (
-          <>
-            <span className="navbar__user">{user.username}</span>
-            <button onClick={handleLogout} className="navbar__logout">
-              התנתק
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/login">כניסה</Link>
-            <Link to="/register">הרשמה</Link>
-          </>
-        )}
+        <Link to="/login">Login</Link>
+        <Link to="/register">Register</Link>
+        {user ? <span className="navbar__user">{user.username}</span> : null}
       </div>
     </nav>
   );
