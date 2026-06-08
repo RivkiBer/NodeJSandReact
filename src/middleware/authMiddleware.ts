@@ -13,7 +13,7 @@ interface AuthenticatedRequest extends Request {
   user?: JwtPayloadData;
 }
 
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+export const authenticateUser = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ message: "Authorization token is required" });

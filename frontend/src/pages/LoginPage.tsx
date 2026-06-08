@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import axiosInstance from "../api/axiosInstance";
 import { useAppDispatch } from "../store/hooks";
@@ -18,6 +19,7 @@ const LoginPage = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -38,16 +40,19 @@ const LoginPage = () => {
       const token = result.token;
 
       localStorage.setItem("jwtToken", token);
+      localStorage.setItem("user", JSON.stringify(result.user));
 
       dispatch(
         setUser({
           id: result.user.id,
-          name: result.user.name,
+          username: result.user.username,
           email: result.user.email,
+          role: result.user.role,
         })
       );
 
       setMessage("Login successful!");
+      navigate("/surveys");
     } catch (error) {
       const message =
         axios.isAxiosError(error) && error.response?.data?.message
