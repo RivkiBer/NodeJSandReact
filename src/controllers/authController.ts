@@ -21,11 +21,13 @@ const createJwtToken = (payload: LoginPayload) => {
 
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, password } = validateRegisterInput(req);
+    const { username, email, password } = validateRegisterInput(req);
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
-      const error = new Error("Email already in use");
+      const error = new Error(
+        existingUser.username === username ? "Username already in use" : "Email already in use"
+      );
       (error as any).status = 409;
       throw error;
     }
@@ -90,11 +92,13 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
       token,
       user: {
         id: user._id,
-        name: user.name,
+        username: user.username,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (error) {
     next(error);
   }
 };
+

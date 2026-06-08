@@ -3,7 +3,7 @@
  *
  * Slice זה מנהל את המצב של המשתמש ב־Redux.
  * המצב כולל:
- * - נתוני המשתמש (שם, אימייל, מזהה)
+ * - נתוני המשתמש (שם משתמש, אימייל, מזהה)
  * - מצב טעינה
  * - שגיאות
  */
@@ -11,8 +11,9 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface IUser {
   id: string;
-  name: string;
+  username: string;
   email: string;
+  role?: string;
 }
 
 interface UserState {
