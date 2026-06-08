@@ -136,8 +136,10 @@ export const updateSurvey = async (req: Request, res: Response, next: NextFuncti
       throw error;
     }
 
-    // Check if user is the creator
-    if (survey.createdBy.toString() !== userId) {
+    const userRole = (req as any).user?.role;
+
+    // Check if user is the creator or an admin
+    if (survey.createdBy.toString() !== userId && userRole !== "admin") {
       const error = new Error("You are not authorized to update this survey");
       (error as any).status = 403;
       throw error;
@@ -185,8 +187,10 @@ export const deleteSurvey = async (req: Request, res: Response, next: NextFuncti
       throw error;
     }
 
-    // Check if user is the creator
-    if (survey.createdBy.toString() !== userId) {
+    const userRole = (req as any).user?.role;
+
+    // Check if user is the creator or an admin
+    if (survey.createdBy.toString() !== userId && userRole !== "admin") {
       const error = new Error("You are not authorized to delete this survey");
       (error as any).status = 403;
       throw error;

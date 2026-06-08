@@ -39,16 +39,20 @@ const RegisterPage = () => {
       const response = await axiosInstance.post("/auth/register", data);
       const result = response.data;
 
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
+
       dispatch(
         setUser({
           id: result.user.id,
           username: result.user.username,
           email: result.user.email,
+          role: result.user.role,
         })
       );
 
-      setMessage("ההרשמה בוצעה בהצלחה! מעבר לעמוד הכניסה...");
-      setTimeout(() => navigate("/login"), 2000);
+      setMessage("ההרשמה בוצעה בהצלחה! מעבירה לעמוד הבית...");
+      setTimeout(() => navigate("/"), 2000);
     } catch (error) {
       const message =
         axios.isAxiosError(error) && error.response?.data?.message
@@ -111,9 +115,6 @@ const RegisterPage = () => {
           </button>
         </form>
 
-        <p className="auth-link">
-          יש לך חשבון כבר? <a href="/login">התחבר כאן</a>
-        </p>
       </div>
     </div>
   );

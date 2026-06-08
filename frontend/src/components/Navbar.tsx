@@ -10,7 +10,7 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     dispatch(clearUser());
-    navigate("/login");
+    navigate("/register");
   };
 
   return (
@@ -28,7 +28,6 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            <Link to="/login">כניסה</Link>
             <Link to="/register">הרשמה</Link>
           </>
         )}
