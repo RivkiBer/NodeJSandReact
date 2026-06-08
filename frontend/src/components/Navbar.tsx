@@ -21,7 +21,7 @@ const Navbar = () => {
       <div className="navbar__links">
         <Link to="/login">Login</Link>
         <Link to="/register">Register</Link>
-        {user ? <span className="navbar__user">{user.name}</span> : null}
+        {user ? <span className="navbar__user">{user.username}</span> : null}
       </div>
     </nav>
   );
