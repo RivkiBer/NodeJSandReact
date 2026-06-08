@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
-import jwt, { Secret, SignOptions } from "jsonwebtoken";
+import jwt, { type Secret, type SignOptions } from "jsonwebtoken";
 import User from "../models/User.js";
 import { validateRegisterInput, validateLoginInput } from "../validators/authValidators.js";
 import { jwtConfig } from "../config/jwt.js";
@@ -32,9 +32,14 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashedPassword });
+    const token = createJwtToken({
+      userId: user._id.toString(),
+      email: user.email,
+    });
 
     res.status(201).json({
       message: "User registered successfully",
+      token,
       user: {
         id: user._id,
         name: user.name,

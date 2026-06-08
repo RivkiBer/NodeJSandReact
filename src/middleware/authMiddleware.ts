@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { type Secret } from "jsonwebtoken";
 import { jwtConfig } from "../config/jwt.js";
 
 interface JwtPayloadData {
@@ -22,7 +22,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, jwtConfig.secret) as JwtPayloadData;
+    const decoded = jwt.verify(token, jwtConfig.secret as Secret) as JwtPayloadData;
     (req as AuthenticatedRequest).user = {
       userId: decoded.userId,
       email: decoded.email,

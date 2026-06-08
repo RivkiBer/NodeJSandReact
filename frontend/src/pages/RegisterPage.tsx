@@ -36,6 +36,11 @@ const RegisterPage = () => {
     try {
       const response = await axiosInstance.post("/auth/register", data);
       const result = response.data;
+      const token = result.token;
+
+      if (token) {
+        localStorage.setItem("jwtToken", token);
+      }
 
       dispatch(
         setUser({
@@ -45,7 +50,7 @@ const RegisterPage = () => {
         })
       );
 
-      setMessage("Registration successful! You can now log in.");
+      setMessage("Registration successful! You are now logged in.");
     } catch (error) {
       const message =
         axios.isAxiosError(error) && error.response?.data?.message
