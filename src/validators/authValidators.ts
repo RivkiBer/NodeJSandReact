@@ -1,7 +1,7 @@
 import { Request } from "express";
 
 export interface RegisterInput {
-  name: string;
+  username: string;
   email: string;
   password: string;
 }
@@ -12,12 +12,13 @@ export interface LoginInput {
 }
 
 const EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 
 export const validateRegisterInput = (req: Request): RegisterInput => {
-  const { name, email, password } = req.body;
+  const { username, email, password } = req.body;
 
-  if (!name || typeof name !== "string" || name.trim().length < 2) {
-    const error = new Error("Name is required and must be at least 2 characters long");
+  if (!username || typeof username !== "string" || !USERNAME_REGEX.test(username)) {
+    const error = new Error("Username must be 3-20 characters (letters, numbers, underscore only)");
     (error as any).status = 400;
     throw error;
   }
@@ -35,7 +36,7 @@ export const validateRegisterInput = (req: Request): RegisterInput => {
   }
 
   return {
-    name: name.trim(),
+    username: username.trim().toLowerCase(),
     email: email.trim().toLowerCase(),
     password,
   };

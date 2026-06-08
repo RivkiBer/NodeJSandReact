@@ -2,15 +2,16 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import axios, { AxiosError } from "axios";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import axiosInstance from "../api/axiosInstance";
 import { useAppDispatch } from "../store/hooks";
 import { setLoading, setUser, setError } from "../store/userSlice";
 
 const registerSchema = z.object({
-  name: z.string().min(2, "Name must have at least 2 characters"),
-  email: z.string().email("Enter a valid email address"),
-  password: z.string().min(6, "Password must have at least 6 characters"),
+  username: z.string().min(3, "שם משתמש חייב להיות לפחות 3 תווים"),
+  email: z.string().email("כתובת אימייל לא תקינה"),
+  password: z.string().min(6, "סיסמה חייבת להיות לפחות 6 תווים"),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -19,6 +20,7 @@ const RegisterPage = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -36,58 +38,89 @@ const RegisterPage = () => {
     try {
       const response = await axiosInstance.post("/auth/register", data);
       const result = response.data;
+      const token = result.token;
+
+      if (token) {
+        localStorage.setItem("jwtToken", token);
+      }
+
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
 
       dispatch(
         setUser({
           id: result.user.id,
-          name: result.user.name,
+          username: result.user.username,
           email: result.user.email,
+          role: result.user.role,
         })
       );
 
-      setMessage("Registration successful! You can now log in.");
+      setMessage("Registration successful! You are now logged in.");
     } catch (error) {
       const message =
         axios.isAxiosError(error) && error.response?.data?.message
           ? error.response.data.message
           : error instanceof Error
           ? error.message
-          : "Registration failed";
+          : "ההרשמה נכשלה";
       dispatch(setError(message));
       setErrorMessage(message);
     }
   };
 
   return (
-    <main>
-      <h1>Register</h1>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div>
-          <label htmlFor="name">Name</label>
-          <input id="name" type="text" {...register("name")} />
-          {errors.name && <p>{errors.name.message}</p>}
-        </div>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h1>הרשמה</h1>
 
-        <div>
-          <label htmlFor="email">Email</label>
-          <input id="email" type="email" {...register("email")} />
-          {errors.email && <p>{errors.email.message}</p>}
-        </div>
+        {message && <div style={{ color: "green", marginBottom: "16px" }}>{message}</div>}
+        {errorMessage && <div className="error-message">{errorMessage}</div>}
 
-        <div>
-          <label htmlFor="password">Password</label>
-          <input id="password" type="password" {...register("password")} />
-          {errors.password && <p>{errors.password.message}</p>}
-        </div>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="form-group">
+            <label htmlFor="username">שם משתמש</label>
+            <input
+              id="username"
+              type="text"
+              placeholder="הכנס שם משתמש"
+              {...register("username")}
+              disabled={isSubmitting}
+            />
+            {errors.username && <span className="error-text">{errors.username.message}</span>}
+          </div>
 
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Registering..." : "Register"}
-        </button>
-      </form>
+          <div className="form-group">
+            <label htmlFor="email">אימייל</label>
+            <input
+              id="email"
+              type="email"
+              placeholder="הכנס אימייל"
+              {...register("email")}
+              disabled={isSubmitting}
+            />
+            {errors.email && <span className="error-text">{errors.email.message}</span>}
+          </div>
 
-      {message && <p style={{ color: "green" }}>{message}</p>}
-      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-    </main>
+          <div className="form-group">
+            <label htmlFor="password">סיסמה</label>
+            <input
+              id="password"
+              type="password"
+              placeholder="הכנס סיסמה"
+              {...register("password")}
+              disabled={isSubmitting}
+            />
+            {errors.password && <span className="error-text">{errors.password.message}</span>}
+          </div>
+
+          <button type="submit" disabled={isSubmitting} className="submit-button">
+            {isSubmitting ? "מעבד..." : "הרשם"}
+          </button>
+        </form>
+
+      </div>
+    </div>
   );
 };
 

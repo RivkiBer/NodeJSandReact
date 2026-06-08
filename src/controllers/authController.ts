@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
-import jwt, { Secret, SignOptions } from "jsonwebtoken";
+import jwt, { type Secret, type SignOptions } from "jsonwebtoken";
 import User from "../models/User.js";
 import { validateRegisterInput, validateLoginInput } from "../validators/authValidators.js";
 import { jwtConfig } from "../config/jwt.js";
@@ -21,20 +21,27 @@ const createJwtToken = (payload: LoginPayload) => {
 
 export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, password } = validateRegisterInput(req);
+    const { username, email, password } = validateRegisterInput(req);
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
-      const error = new Error("Email already in use");
+      const error = new Error(
+        existingUser.username === username ? "Username already in use" : "Email already in use"
+      );
       (error as any).status = 409;
       throw error;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashedPassword });
+    const token = createJwtToken({
+      userId: user._id.toString(),
+      email: user.email,
+    });
 
     res.status(201).json({
       message: "User registered successfully",
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -85,11 +92,13 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
       token,
       user: {
         id: user._id,
-        name: user.name,
+        username: user.username,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (error) {
     next(error);
   }
 };
+
