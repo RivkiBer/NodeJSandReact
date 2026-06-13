@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import Question, { IQuestion } from "../models/Question.js";
 import Survey from "../models/Survey.js";
 
-const VALID_TYPES = ["text", "single-choice", "multiple-choice"] as const;
+const VALID_TYPES = ["text", "single-choice", "multiple-choice", "rating"] as const;
 type QuestionType = (typeof VALID_TYPES)[number];
 
 class ServiceError extends Error {
@@ -65,6 +65,14 @@ const normalizeOptions = (options: unknown) => {
   return normalized;
 };
 
+const normalizeRatingValue = (value: unknown, field: string) => {
+  const numberValue = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(numberValue) || numberValue < 1 || numberValue > 20) {
+    throw badRequest(`${field} must be a number between 1 and 20.`);
+  }
+  return Math.floor(numberValue);
+};
+
 const validateSurveyId = async (surveyId: unknown) => {
   if (typeof surveyId !== "string" || !Types.ObjectId.isValid(surveyId)) {
     throw badRequest("Survey id is required and must be a valid ObjectId.");
@@ -105,6 +113,35 @@ const buildQuestionPayload = async (
 
   if (type === "text") {
     payload.options = [];
+  } else if (type === "rating") {
+    payload.options = [];
+    const minRating = rawData.minRating ?? existingQuestion?.minRating ?? 1;
+    const maxRating = rawData.maxRating ?? existingQuestion?.maxRating ?? 5;
+
+    const normalizedMin = normalizeRatingValue(minRating, "minRating");
+    const normalizedMax = normalizeRatingValue(maxRating, "maxRating");
+
+    if (normalizedMin >= normalizedMax) {
+      throw badRequest("minRating must be lower than maxRating.");
+    }
+
+    payload.minRating = normalizedMin;
+    payload.maxRating = normalizedMax;
+    // optional textual labels for rating endpoints
+    const minLabelRaw = rawData.minLabel ?? existingQuestion?.minLabel;
+    const maxLabelRaw = rawData.maxLabel ?? existingQuestion?.maxLabel;
+    if (minLabelRaw !== undefined) {
+      if (typeof minLabelRaw !== "string") throw badRequest("minLabel must be a string.");
+      const trimmed = minLabelRaw.trim();
+      if (trimmed.length > 100) throw badRequest("minLabel must be at most 100 characters.");
+      payload.minLabel = trimmed;
+    }
+    if (maxLabelRaw !== undefined) {
+      if (typeof maxLabelRaw !== "string") throw badRequest("maxLabel must be a string.");
+      const trimmed = maxLabelRaw.trim();
+      if (trimmed.length > 100) throw badRequest("maxLabel must be at most 100 characters.");
+      payload.maxLabel = trimmed;
+    }
   } else {
     const optionsProvided =
       rawData.options !== undefined ? rawData.options : existingQuestion?.options;

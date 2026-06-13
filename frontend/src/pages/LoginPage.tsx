@@ -9,7 +9,7 @@ import { useAppDispatch } from "../store/hooks";
 import { setLoading, setUser, setError } from "../store/userSlice";
 
 const loginSchema = z.object({
-  email: z.string().email("כתובת אימייל לא תקינה"),
+  username: z.string().min(2, "שם המשתמש חייב להיות לפחות 2 תווים"),
   password: z.string().min(6, "הסיסמה חייבת להיות לפחות 6 תווים"),
 });
 
@@ -71,9 +71,9 @@ const LoginPage = () => {
       <h1>התחבר</h1>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div>
-          <label htmlFor="email">אימייל</label>
-          <input id="email" type="email" {...register("email")} />
-          {errors.email && <p>{errors.email.message}</p>}
+          <label htmlFor="username">שם משתמש</label>
+          <input id="username" type="text" {...register("username")} />
+          {errors.username && <p>{errors.username.message}</p>}
         </div>
 
         <div>

@@ -88,7 +88,7 @@ const SurveysPage = () => {
   const canCreate = user?.role === "admin" || user?.role === "creator";
 
   const handleViewSurvey = (surveyId: string) => {
-    navigate(`/surveys/${surveyId}`);
+    navigate(`/surveys/${surveyId}/respond`);
   };
 
   const handleEditSurvey = (surveyId: string) => {
@@ -182,7 +182,7 @@ const SurveysPage = () => {
                   className="survey-card__button"
                   onClick={() => handleViewSurvey(survey._id)}
                 >
-                  צפה בסקר
+                  ענה על סקר
                 </button>
                 {user?.username === survey.createdBy.username && (
                   <>

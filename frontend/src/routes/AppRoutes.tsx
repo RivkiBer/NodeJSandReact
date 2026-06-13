@@ -8,6 +8,7 @@ import LoginPage from "../pages/LoginPage";
 import SurveysPage from "../pages/SurveysPage";
 import CreateSurveyPage from "../pages/CreateSurveyPage";
 import SurveyDetailPage from "../pages/SurveyDetailPage";
+import RespondSurveyPage from "../pages/RespondSurveyPage";
 import EditSurveyPage from "../pages/EditSurveyPage";
 import AdminUsersPage from "../pages/AdminUsersPage";
 
@@ -77,6 +78,10 @@ const AppRoutes = () => {
         <Route
           path="/surveys/:id"
           element={isAuthenticated ? <SurveyDetailPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/surveys/:id/respond"
+          element={isAuthenticated ? <RespondSurveyPage /> : <Navigate to="/login" />}
         />
         <Route
           path="/surveys/:id/edit"

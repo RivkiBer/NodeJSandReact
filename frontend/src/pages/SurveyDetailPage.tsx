@@ -13,7 +13,7 @@ interface Survey {
     username: string;
     email: string;
   };
-  questions: string[];
+  questions: any[];
   createdAt: string;
   updatedAt: string;
 }
@@ -58,7 +58,8 @@ const SurveyDetailPage = () => {
     }
   };
 
-  const canEdit = survey?.createdBy.username === user?.username;
+  const canManage = survey?.createdBy.username === user?.username || user?.role === "admin";
+
 
   return (
     <div className="survey-detail-container">
@@ -66,7 +67,7 @@ const SurveyDetailPage = () => {
         <button onClick={() => navigate("/surveys")} className="btn-pagination">
           חזור לרשימה
         </button>
-        {canEdit && (
+        {canManage && (
           <div className="survey-detail-actions">
             <button onClick={() => navigate(`/surveys/${id}/edit`)} className="btn-create">
               ערוך
@@ -81,15 +82,54 @@ const SurveyDetailPage = () => {
       {loading && <div className="loading">טוען סקר...</div>}
       {error && <div className="error-message">{error}</div>}
       {!loading && survey && (
-        <div className="survey-detail-card">
-          <h1>{survey.title}</h1>
-          {survey.category && <div className="survey-card__category">{survey.category}</div>}
-          {survey.description && <p>{survey.description}</p>}
+        <div>
+          <div className="survey-detail-card">
+            <h1>{survey.title}</h1>
+            {survey.category && <div className="survey-card__category">{survey.category}</div>}
+            {survey.description && <p>{survey.description}</p>}
 
-          <div className="survey-detail-meta">
-            <span>יוצר: {survey.createdBy.username}</span>
-            <span>נוצר בתאריך: {new Date(survey.createdAt).toLocaleDateString("he-IL")}</span>
-            <span>שאלות: {survey.questions.length}</span>
+            <div className="survey-detail-meta">
+              <span>יוצר: {survey.createdBy.username}</span>
+              <span>נוצר בתאריך: {new Date(survey.createdAt).toLocaleDateString("he-IL")}</span>
+              <span>שאלות: {survey.questions.length}</span>
+            </div>
+          </div>
+
+          {canManage && (
+            <div className="survey-detail-actions">
+              <button onClick={() => navigate(`/surveys/${id}/edit`)} className="btn-create">
+                ערוך
+              </button>
+              <button onClick={handleDelete} className="cancel-button">
+                מחק
+              </button>
+            </div>
+          )}
+
+          <div style={{ marginBottom: 24 }}>
+            <button onClick={() => navigate(`/surveys/${id}/respond`)} className="btn-create">
+              ענה על הסקר
+            </button>
+          </div>
+
+          <div className="questions-list">
+            <h2>שאלות</h2>
+            {survey.questions.length === 0 ? (
+              <div>עדיין לא נוספו שאלות</div>
+            ) : (
+              <ul>
+                {survey.questions.map((q: any) => (
+                  <li key={q._id ?? q}>
+                    {q.text ?? String(q)}
+                    {q.type === "rating" && q.minRating != null && q.maxRating != null ? (
+                      <span> — דירוג {q.minRating} עד {q.maxRating}</span>
+                    ) : q.type ? (
+                      <span> — {q.type}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       )}

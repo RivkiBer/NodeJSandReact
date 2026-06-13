@@ -38,7 +38,7 @@ const CreateSurveyPage = () => {
       const response = await axiosInstance.post("/surveys", data);
 
       setSuccessMessage("הסקר נוצר בהצלחה!");
-      setTimeout(() => navigate(`/surveys/${response.data.survey._id}`), 1500);
+      setTimeout(() => navigate(`/surveys/${response.data.survey._id}/edit`), 1500);
     } catch (error: any) {
       const message = error.response?.data?.message || "יצירת הסקר נכשלה. אנא נסה שנית.";
       setErrorMessage(message);
