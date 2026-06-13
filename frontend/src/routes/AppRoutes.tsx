@@ -91,6 +91,10 @@ const AppRoutes = () => {
         />
 
         <Route
+          path="/surveys/:id/respond"
+          element={isAuthenticated ? <RespondSurveyPage /> : <Navigate to="/login" />}
+        />
+        <Route
           path="/surveys/:id/edit"
           element={isAuthenticated ? <EditSurveyPage /> : <Navigate to="/login" />}
         />
