@@ -7,17 +7,17 @@ import {
   updateQuestionController,
   deleteQuestionController,
 } from "../controllers/questionController.js";
+import { authenticate } from "../middleware/authMiddleware.js";
 
 const questionRouter = Router();
 
-questionRouter.post("/", createQuestionController);
-
+// Public: list and view
 questionRouter.get("/", getAllQuestionsController);
-
 questionRouter.get("/:id", getQuestionByIdController);
 
-questionRouter.put("/:id", updateQuestionController);
-
-questionRouter.delete("/:id", deleteQuestionController);
+// Protected: create/update/delete
+questionRouter.post("/", authenticate, createQuestionController);
+questionRouter.put("/:id", authenticate, updateQuestionController);
+questionRouter.delete("/:id", authenticate, deleteQuestionController);
 
 export default questionRouter;

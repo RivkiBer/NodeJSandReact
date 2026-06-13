@@ -4,7 +4,7 @@ import { jwtConfig } from "../config/jwt.js";
 
 interface JwtPayloadData {
   userId: string;
-  email: string;
+  username?: string;
   iat?: number;
   exp?: number;
 }
@@ -25,7 +25,7 @@ export const authenticateUser = (req: Request, res: Response, next: NextFunction
     const decoded = jwt.verify(token, jwtConfig.secret as Secret) as JwtPayloadData;
     (req as AuthenticatedRequest).user = {
       userId: decoded.userId,
-      email: decoded.email,
+      username: (decoded as any).username,
       iat: decoded.iat,
       exp: decoded.exp,
     };

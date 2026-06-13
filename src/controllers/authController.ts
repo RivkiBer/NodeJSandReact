@@ -7,7 +7,7 @@ import { jwtConfig } from "../config/jwt.js";
 
 interface LoginPayload {
   userId: string;
-  email: string;
+  username?: string;
 }
 
 const createJwtToken = (payload: LoginPayload) => {
@@ -36,7 +36,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
     const user = await User.create({ username, email, password: hashedPassword });
     const token = createJwtToken({
       userId: user._id.toString(),
-      email: user.email,
+      username: user.username,
     });
 
     res.status(201).json({
@@ -46,6 +46,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
         id: user._id,
         username: user.username,
         email: user.email,
+        role: (user as any).role,
       },
     });
   } catch (error) {
@@ -55,12 +56,12 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { email, password } = validateLoginInput(req);
+    const { username, password } = validateLoginInput(req);
 
-    const user = await User.findOne({ email });
-    console.log("aaaa Login attempt for email:", email);
+    const user = await User.findOne({ username });
+    console.log("Login attempt for username:", username);
     if (!user) {
-      const error = new Error("Invalid email or password");
+      const error = new Error("Invalid username or password");
       (error as any).status = 401;
       throw error;
     }
@@ -78,14 +79,14 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     }
 
     if (!passwordMatches) {
-      const error = new Error("Invalid email or password");
+      const error = new Error("Invalid username or password");
       (error as any).status = 401;
       throw error;
     }
 
     const token = createJwtToken({
       userId: user._id.toString(),
-      email: user.email,
+      username: user.username,
     });
 
     res.status(200).json({

@@ -85,9 +85,10 @@ const SurveysPage = () => {
   };
 
   const user = useAppSelector((state) => state.user.user);
+  const canCreate = user?.role === "admin" || user?.role === "creator";
 
   const handleViewSurvey = (surveyId: string) => {
-    navigate(`/surveys/${surveyId}`);
+    navigate(`/surveys/${surveyId}/respond`);
   };
 
   const handleEditSurvey = (surveyId: string) => {
@@ -110,9 +111,11 @@ const SurveysPage = () => {
     <div className="surveys-container">
       <div className="surveys-header">
         <h1>סקרים</h1>
-        <button className="btn-create" onClick={() => navigate("/surveys/create")}>
-          צור סקר
-        </button>
+        {canCreate && (
+          <button className="btn-create" onClick={() => navigate("/surveys/create")}> 
+            צור סקר
+          </button>
+        )}
       </div>
 
       {/* Search and Filter Section */}
@@ -179,7 +182,7 @@ const SurveysPage = () => {
                   className="survey-card__button"
                   onClick={() => handleViewSurvey(survey._id)}
                 >
-                  צפה בסקר
+                  ענה על סקר
                 </button>
                 {user?.username === survey.createdBy.username && (
                   <>

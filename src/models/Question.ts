@@ -5,6 +5,10 @@ export interface IQuestion extends Document {
   text: string;
   type: string;
   options?: string[];
+  minRating?: number;
+  maxRating?: number;
+  minLabel?: string;
+  maxLabel?: string;
   required: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -16,6 +20,10 @@ const questionSchema = new Schema<IQuestion>(
     text: { type: String, required: true, trim: true },
     type: { type: String, required: true, trim: true, default: "text" },
     options: [{ type: String, trim: true }],
+    minRating: { type: Number },
+    minLabel: { type: String, trim: true },
+    maxLabel: { type: String, trim: true },
+    maxRating: { type: Number },
     required: { type: Boolean, default: false },
   },
   {

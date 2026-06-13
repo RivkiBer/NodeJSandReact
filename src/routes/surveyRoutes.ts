@@ -6,7 +6,7 @@ import {
   updateSurvey,
   deleteSurvey,
 } from "../controllers/surveyController.js";
-import { authenticateUser } from "../middleware/authMiddleware.js";
+import { authenticate } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
@@ -17,12 +17,12 @@ router.get("/", getAllSurveys);
 router.get("/:id", getSurveyById);
 
 // POST /surveys - Create new survey
-router.post("/", authenticateUser, createSurvey);
+router.post("/", authenticate, createSurvey);
 
 // PUT /surveys/:id - Update survey
-router.put("/:id", authenticateUser, updateSurvey);
+router.put("/:id", authenticate, updateSurvey);
 
 // DELETE /surveys/:id - Delete survey
-router.delete("/:id", authenticateUser, deleteSurvey);
+router.delete("/:id", authenticate, deleteSurvey);
 
 export default router;

@@ -50,6 +50,14 @@ const normalizeMultipleChoiceAnswer = (answer: unknown, options: string[]) => {
   return unique;
 };
 
+const normalizeRatingAnswer = (answer: unknown, minRating = 1, maxRating = 5) => {
+  const numeric = typeof answer === "number" ? answer : Number(answer);
+  if (!Number.isFinite(numeric) || numeric < minRating || numeric > maxRating) {
+    throw badRequest(`Answer must be a number between ${minRating} and ${maxRating}.`);
+  }
+  return String(Math.round(numeric));
+};
+
 const validateSurveyId = async (surveyId: unknown) => {
   if (typeof surveyId !== "string" || !Types.ObjectId.isValid(surveyId)) throw badRequest("Survey id is required and must be a valid ObjectId.");
   const survey = await Survey.findById(surveyId);
@@ -77,6 +85,10 @@ const buildAnswerForStorage = (question: IQuestion, rawAnswer: unknown) => {
     // store as JSON string
     const arr = normalizeMultipleChoiceAnswer(rawAnswer, question.options || []);
     return JSON.stringify(arr);
+  }
+
+  if (question.type === "rating") {
+    return normalizeRatingAnswer(rawAnswer, question.minRating ?? 1, question.maxRating ?? 5);
   }
 
   throw badRequest("Unsupported question type.");
