@@ -5,6 +5,16 @@ import { setUser } from "../store/userSlice";
 import Layout from "../components/Layout";
 import RegisterPage from "../pages/RegisterPage";
 import LoginPage from "../pages/LoginPage";
+import SurveysPage from "../pages/SurveysPage";
+import CreateSurveyPage from "../pages/CreateSurveyPage";
+import SurveyDetailPage from "../pages/SurveyDetailPage";
+import EditSurveyPage from "../pages/EditSurveyPage";
+import AdminUsersPage from "../pages/AdminUsersPage";
+
+interface RequireRoleProps {
+  allowedRoles: string[];
+  children: JSX.Element;
+}
 
 const AppRoutes = () => {
   const dispatch = useAppDispatch();
@@ -25,12 +35,61 @@ const AppRoutes = () => {
     }
   }, [dispatch, user]);
 
+  const RequireRole = ({ allowedRoles, children }: RequireRoleProps) => {
+    if (!isAuthenticated) {
+      return <Navigate to="/login" />;
+    }
+
+    if (!user || !allowedRoles.includes(user.role || "")) {
+      return <Navigate to="/surveys" />;
+    }
+
+    return children;
+  };
+
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={isAuthenticated ? <Navigate to="/surveys" /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/register"
+          element={isAuthenticated ? <Navigate to="/surveys" /> : <RegisterPage />}
+        />
+        <Route
+          path="/login"
+          element={isAuthenticated ? <Navigate to="/surveys" /> : <LoginPage />}
+        />
+        <Route
+          path="/surveys"
+          element={isAuthenticated ? <SurveysPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/surveys/create"
+          element={
+            <RequireRole allowedRoles={["creator", "admin"]}>
+              <CreateSurveyPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/surveys/:id"
+          element={isAuthenticated ? <SurveyDetailPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/surveys/:id/edit"
+          element={isAuthenticated ? <EditSurveyPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <RequireRole allowedRoles={["admin"]}>
+              <AdminUsersPage />
+            </RequireRole>
+          }
+        />
       </Routes>
     </Layout>
   );

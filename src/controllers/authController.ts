@@ -33,7 +33,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, password: hashedPassword });
+    const user = await User.create({ username, email, password: hashedPassword });
     const token = createJwtToken({
       userId: user._id.toString(),
       email: user.email,
@@ -44,8 +44,9 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
       token,
       user: {
         id: user._id,
-        name: user.name,
+        username: user.username,
         email: user.email,
+        role: (user as any).role,
       },
     });
   } catch (error) {

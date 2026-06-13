@@ -2,14 +2,15 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import axiosInstance from "../api/axiosInstance";
 import { useAppDispatch } from "../store/hooks";
 import { setLoading, setUser, setError } from "../store/userSlice";
 
 const loginSchema = z.object({
-  email: z.string().email("Enter a valid email address"),
-  password: z.string().min(6, "Password must have at least 6 characters"),
+  email: z.string().email("כתובת אימייל לא תקינה"),
+  password: z.string().min(6, "הסיסמה חייבת להיות לפחות 6 תווים"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -18,6 +19,7 @@ const LoginPage = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -37,17 +39,21 @@ const LoginPage = () => {
       const result = response.data;
       const token = result.token;
 
-      localStorage.setItem("jwtToken", token);
+      if (token) {
+        localStorage.setItem("token", token);
+      }
 
-      dispatch(
-        setUser({
-          id: result.user.id,
-          name: result.user.name,
-          email: result.user.email,
-        })
-      );
+      const user = {
+        id: result.user.id,
+        username: result.user.username,
+        email: result.user.email,
+        role: result.user.role,
+      };
 
-      setMessage("Login successful!");
+      localStorage.setItem("user", JSON.stringify(user));
+      dispatch(setUser(user));
+
+      navigate("/surveys");
     } catch (error) {
       const message =
         axios.isAxiosError(error) && error.response?.data?.message
@@ -62,22 +68,22 @@ const LoginPage = () => {
 
   return (
     <main>
-      <h1>Login</h1>
+      <h1>התחבר</h1>
       <form onSubmit={handleSubmit(onSubmit)}>
         <div>
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">אימייל</label>
           <input id="email" type="email" {...register("email")} />
           {errors.email && <p>{errors.email.message}</p>}
         </div>
 
         <div>
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">סיסמה</label>
           <input id="password" type="password" {...register("password")} />
           {errors.password && <p>{errors.password.message}</p>}
         </div>
 
         <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Logging in..." : "Login"}
+          {isSubmitting ? "מתחבר..." : "התחבר"}
         </button>
       </form>
 

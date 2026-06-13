@@ -9,11 +9,13 @@
  */
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+type UserRole = "user" | "creator" | "admin";
+
 interface IUser {
   id: string;
   username: string;
   email: string;
-  role?: string;
+  role?: UserRole;
 }
 
 interface UserState {

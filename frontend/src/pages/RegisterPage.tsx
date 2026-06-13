@@ -8,8 +8,14 @@ import axiosInstance from "../api/axiosInstance";
 import { useAppDispatch } from "../store/hooks";
 import { setLoading, setUser, setError } from "../store/userSlice";
 
+const USERNAME_REGEX = /^[\p{L}0-9_]+$/u;
+
 const registerSchema = z.object({
-  username: z.string().min(3, "שם משתמש חייב להיות לפחות 3 תווים"),
+  username: z
+    .string()
+    .min(2, "שם משתמש חייב להיות לפחות 2 תווים")
+    .max(20, "שם משתמש חייב להיות עד 20 תווים")
+    .regex(USERNAME_REGEX, "שם המשתמש יכול לכלול אותיות, ספרות וקו תחתי בלבד"),
   email: z.string().email("כתובת אימייל לא תקינה"),
   password: z.string().min(6, "סיסמה חייבת להיות לפחות 6 תווים"),
 });
@@ -41,22 +47,20 @@ const RegisterPage = () => {
       const token = result.token;
 
       if (token) {
-        localStorage.setItem("jwtToken", token);
+        localStorage.setItem("token", token);
       }
 
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("user", JSON.stringify(result.user));
+      const user = {
+        id: result.user.id,
+        username: result.user.username,
+        email: result.user.email,
+        role: result.user.role,
+      };
 
-      dispatch(
-        setUser({
-          id: result.user.id,
-          username: result.user.username,
-          email: result.user.email,
-          role: result.user.role,
-        })
-      );
+      localStorage.setItem("user", JSON.stringify(user));
+      dispatch(setUser(user));
 
-      setMessage("Registration successful! You are now logged in.");
+      navigate("/surveys");
     } catch (error) {
       const message =
         axios.isAxiosError(error) && error.response?.data?.message

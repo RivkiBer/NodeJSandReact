@@ -7,10 +7,13 @@ const Navbar = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
+  const canCreate = user?.role === "admin" || user?.role === "creator";
+
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     dispatch(clearUser());
-    navigate("/register");
+    navigate("/login");
   };
 
   return (
@@ -19,9 +22,22 @@ const Navbar = () => {
         <Link to="/">סקרים וסטטיסטיקות</Link>
       </div>
       <div className="navbar__links">
-        <Link to="/login">Login</Link>
-        <Link to="/register">Register</Link>
-        {user ? <span className="navbar__user">{user.username}</span> : null}
+        {!user && (
+          <>
+            <Link to="/login">התחבר</Link>
+            <Link to="/register">הירשם</Link>
+          </>
+        )}
+
+        {user && (
+          <>
+            <Link to="/surveys">הסקרים</Link>
+            {canCreate && <Link to="/surveys/create">צור סקר</Link>}
+            {user.role === "admin" && <Link to="/admin/users">ניהול משתמשים</Link>}
+            <span className="navbar__user">שלום, {user.username} ({user.role})</span>
+            <button onClick={handleLogout} className="logout-button">התנתק</button>
+          </>
+        )}
       </div>
     </nav>
   );

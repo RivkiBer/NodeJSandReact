@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Survey from "../models/Survey.js";
+import User from "../models/User.js";
+import "../models/Question.js";
 import { validateCreateSurvey, validateUpdateSurvey } from "../validators/surveyValidators.js";
 import { Types } from "mongoose";
 
@@ -82,7 +84,7 @@ export const getSurveyById = async (req: Request, res: Response, next: NextFunct
 export const createSurvey = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, description, category } = validateCreateSurvey(req);
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.userId;
 
     if (!userId) {
       const error = new Error("User not authenticated");
@@ -114,7 +116,7 @@ export const updateSurvey = async (req: Request, res: Response, next: NextFuncti
   try {
     const { id } = req.params;
     const updateData = validateUpdateSurvey(req);
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.userId;
 
     if (!Types.ObjectId.isValid(id)) {
       const error = new Error("Invalid survey ID");
@@ -127,7 +129,7 @@ export const updateSurvey = async (req: Request, res: Response, next: NextFuncti
       (error as any).status = 401;
       throw error;
     }
-
+    // Fetch survey and user role
     const survey = await Survey.findById(id);
 
     if (!survey) {
@@ -135,8 +137,8 @@ export const updateSurvey = async (req: Request, res: Response, next: NextFuncti
       (error as any).status = 404;
       throw error;
     }
-
-    const userRole = (req as any).user?.role;
+    const currentUser = await User.findById(userId);
+    const userRole = currentUser?.role;
 
     // Check if user is the creator or an admin
     if (survey.createdBy.toString() !== userId && userRole !== "admin") {
@@ -165,7 +167,7 @@ export const updateSurvey = async (req: Request, res: Response, next: NextFuncti
 export const deleteSurvey = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.userId;
 
     if (!Types.ObjectId.isValid(id)) {
       const error = new Error("Invalid survey ID");
@@ -178,7 +180,6 @@ export const deleteSurvey = async (req: Request, res: Response, next: NextFuncti
       (error as any).status = 401;
       throw error;
     }
-
     const survey = await Survey.findById(id);
 
     if (!survey) {
@@ -186,8 +187,8 @@ export const deleteSurvey = async (req: Request, res: Response, next: NextFuncti
       (error as any).status = 404;
       throw error;
     }
-
-    const userRole = (req as any).user?.role;
+    const currentUser = await User.findById(userId);
+    const userRole = currentUser?.role;
 
     // Check if user is the creator or an admin
     if (survey.createdBy.toString() !== userId && userRole !== "admin") {
