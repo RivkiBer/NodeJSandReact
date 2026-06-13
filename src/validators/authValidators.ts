@@ -7,7 +7,7 @@ export interface RegisterInput {
 }
 
 export interface LoginInput {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -43,10 +43,10 @@ export const validateRegisterInput = (req: Request): RegisterInput => {
 };
 
 export const validateLoginInput = (req: Request): LoginInput => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
-  if (!email || typeof email !== "string" || !EMAIL_REGEX.test(email)) {
-    const error = new Error("אנא הכנס כתובת אימייל תקינה");
+  if (!username || typeof username !== "string" || !USERNAME_REGEX.test(username)) {
+    const error = new Error("שם המשתמש חייב להכיל 2-20 תווים ויכול לכלול אותיות, ספרות וקו תחתי בלבד");
     (error as any).status = 400;
     throw error;
   }
@@ -58,7 +58,7 @@ export const validateLoginInput = (req: Request): LoginInput => {
   }
 
   return {
-    email: email.trim().toLowerCase(),
+    username: username.trim().toLowerCase(),
     password,
   };
 };
